@@ -26,6 +26,7 @@ public class Block {
     private String data;
     private String previousHash;
     private String hash;
+    private long nonce;
 
     /**
      * Создаёт новый блок.
@@ -68,9 +69,7 @@ public class Block {
      * @return SHA-256 hash блока
      */
     public String calculateHash() {
-        // Реализация будет добавлена в уроке 2 (Hashing)
-        // Пока возвращаем заглушку
-        String input = index + timestamp + data + previousHash;
+        String input = index + String.valueOf(timestamp) + data + previousHash + nonce;
         return HashUtil.sha256(input);
     }
 
@@ -112,6 +111,18 @@ public class Block {
      */
     public void setHash(String hash) {
         this.hash = hash;
+    }
+
+    public long getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(long nonce) {
+        this.nonce = nonce;
+    }
+
+    public void incrementNonce() {
+        this.nonce++;
     }
 
     // ==================== Package-private методы для тестирования ====================

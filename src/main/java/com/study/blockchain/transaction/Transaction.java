@@ -1,6 +1,8 @@
 package com.study.blockchain.transaction;
 
 import com.study.blockchain.core.HashUtil;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -86,5 +88,24 @@ public class Transaction {
 
     public List<TransactionOutput> getOutputs() {
         return outputs;
+    }
+
+    public void signAllInputs(PrivateKey privateKey) {
+        for (TransactionInput input : inputs) {
+            input.sign(privateKey);
+        }
+    }
+
+    public boolean verifySignatures() {
+        for (TransactionInput input : inputs) {
+            if (input.getUTXO() == null) {
+                return false;
+            }
+            PublicKey publicKey = input.getUTXO().getRecipientPublicKey();
+            if (!input.verifySignature(publicKey)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

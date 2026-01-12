@@ -1,5 +1,7 @@
 package com.study.blockchain.transaction;
 
+import java.security.*;
+
 public class TransactionInput {
 
     private String transactionOutputId;
@@ -8,6 +10,31 @@ public class TransactionInput {
 
     public TransactionInput(String transactionOutputId) {
         this.transactionOutputId = transactionOutputId;
+    }
+
+    public void sign(PrivateKey privateKey) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initSign(privateKey);
+            sig.update(transactionOutputId.getBytes());
+            this.signature = sig.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new RuntimeException("Signing failed", e);
+        }
+    }
+
+    public boolean verifySignature(PublicKey publicKey) {
+        if (signature == null) {
+            return false;
+        }
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initVerify(publicKey);
+            sig.update(transactionOutputId.getBytes());
+            return sig.verify(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            return false;
+        }
     }
 
     public String getTransactionOutputId() {
