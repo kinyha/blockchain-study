@@ -21,6 +21,8 @@
 | 6 | Wallets | [06-wallets.md](lessons/06-wallets.md) | `Wallet.java` |
 | 7 | Signatures | [07-signatures.md](lessons/07-signatures.md) | `TransactionInput.sign()`, `Transaction.verifySignatures()` |
 | 8 | Proof-of-Work | [08-proof-of-work.md](lessons/08-proof-of-work.md) | `ProofOfWork.java`, `Block.nonce` |
+| 9 | UTXO Pool | [09-utxo.md](lessons/09-utxo.md) | `UTXOPool.java` |
+| 10 | Network | [10-network.md](lessons/10-network.md) | `Node.java`, `Message.java`, `PeerConnection.java` |
 
 ## Быстрый старт
 
@@ -44,7 +46,9 @@ src/main/java/.../core/        # Block, Blockchain, HashUtil
 src/main/java/.../transaction/ # Transaction, Input, Output
 src/main/java/.../wallet/      # Wallet (криптографические ключи)
 src/main/java/.../mining/      # ProofOfWork (майнинг)
-src/test/java/...              # Тесты (запускай для проверки)
+src/main/java/.../utxo/        # UTXOPool (баланс, coin selection)
+src/main/java/.../network/     # Node, Message (P2P сеть)
+src/test/java/...              # Тесты (127 тестов)
 ```
 
 ## Если застрял
