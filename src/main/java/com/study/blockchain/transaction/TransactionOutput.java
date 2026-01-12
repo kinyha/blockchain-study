@@ -9,25 +9,26 @@ import java.util.Base64;
  * Задание: lessons/05-transactions.md
  */
 public class TransactionOutput {
-
     private String id;
     private PublicKey recipientPublicKey;
     private double amount;
     private String parentTransactionId;
 
-    public TransactionOutput(PublicKey recipientPublicKey, double amount, String parentTransactionId) {
-        // TODO: Инициализируй поля и вычисли id через calculateId()
-        throw new UnsupportedOperationException("Реализуй конструктор TransactionOutput");
+    public TransactionOutput(PublicKey recipientPublicKey, double amount,
+                             String parentTransactionId) {
+        this.recipientPublicKey = recipientPublicKey;
+        this.amount = amount;
+        this.parentTransactionId = parentTransactionId;
+        this.id = calculateId();
     }
 
     private String calculateId() {
-        // TODO: Верни sha256 от (publicKey в Base64 + amount + parentTransactionId)
-        throw new UnsupportedOperationException("Реализуй calculateId");
+        String publicKeyEncoded = Base64.getEncoder().encodeToString(recipientPublicKey.getEncoded());
+        return HashUtil.sha256(publicKeyEncoded + amount + parentTransactionId);
     }
 
     public boolean isMine(PublicKey publicKey) {
-        // TODO: Сравни publicKey с recipientPublicKey
-        throw new UnsupportedOperationException("Реализуй isMine");
+        return recipientPublicKey.equals(publicKey);
     }
 
     public String getId() {

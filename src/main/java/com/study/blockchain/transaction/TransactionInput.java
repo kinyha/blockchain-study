@@ -13,8 +13,7 @@ public class TransactionInput {
     private byte[] signature;
 
     public TransactionInput(String transactionOutputId) {
-        // TODO: Инициализируй transactionOutputId
-        throw new UnsupportedOperationException("Реализуй конструктор TransactionInput");
+        this.transactionOutputId = transactionOutputId;
     }
 
     public String getTransactionOutputId() {

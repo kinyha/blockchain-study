@@ -1,9 +1,10 @@
 package com.study.blockchain.transaction;
 
 import com.study.blockchain.core.HashUtil;
+
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 /**
@@ -17,40 +18,63 @@ public class Transaction {
     private List<TransactionOutput> outputs;
 
     public Transaction() {
-        // TODO: Инициализируй списки inputs и outputs
-        throw new UnsupportedOperationException("Реализуй конструктор Transaction");
+        this.inputs = new ArrayList<>();
+        this.outputs = new ArrayList<>();
     }
 
     public String calculateHash() {
-        // TODO: Собери данные из inputs (outputId) и outputs (recipientKey + amount)
-        // Верни sha256 от собранной строки
-        throw new UnsupportedOperationException("Реализуй calculateHash");
+        StringBuilder sb = new StringBuilder();
+
+        for (TransactionInput input : inputs) {
+            sb.append(input.getTransactionOutputId());
+        }
+
+        for (TransactionOutput output : outputs) {
+            String keyEncoded = Base64.getEncoder().encodeToString(
+                    output.getRecipientPublicKey().getEncoded());
+            sb.append(keyEncoded);
+            sb.append(output.getAmount());
+        }
+        return HashUtil.sha256(sb.toString());
     }
 
     public void finalizeTransaction() {
-        // TODO: Вычисли и установи transactionId
-        // Установи parentTransactionId для каждого output
-        throw new UnsupportedOperationException("Реализуй finalizeTransaction");
+        this.transactionId = calculateHash();
+        for (int i = 0; i < outputs.size(); i++) {
+            TransactionOutput oldOutput = outputs.get(i);
+            TransactionOutput newOutput = new TransactionOutput(
+                    oldOutput.getRecipientPublicKey(),
+                    oldOutput.getAmount(),
+                    this.transactionId
+            );
+            outputs.set(i, newOutput);
+        }
     }
 
     public double getInputsValue() {
-        // TODO: Сумма amount всех UTXO из inputs
-        throw new UnsupportedOperationException("Реализуй getInputsValue");
+        double total = 0;
+        for (TransactionInput input : inputs) {
+            if (input.getUTXO() != null) {
+                total += input.getUTXO().getAmount();
+            }
+        }
+        return total;
     }
 
     public double getOutputsValue() {
-        // TODO: Сумма amount всех outputs
-        throw new UnsupportedOperationException("Реализуй getOutputsValue");
+        double total = 0;
+        for (TransactionOutput output : outputs) {
+            total += output.getAmount();
+        }
+        return total;
     }
 
     public void addInput(TransactionInput input) {
-        // TODO: Добавь input в список
-        throw new UnsupportedOperationException("Реализуй addInput");
+        inputs.add(input);
     }
 
     public void addOutput(TransactionOutput output) {
-        // TODO: Добавь output в список
-        throw new UnsupportedOperationException("Реализуй addOutput");
+        outputs.add(output);
     }
 
     public String getTransactionId() {
