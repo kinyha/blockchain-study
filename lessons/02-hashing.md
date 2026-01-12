@@ -16,195 +16,118 @@
 Файл на 10 ГБ         ──▶    7d865e959b2466918c9863afca942d0f...
 ```
 
-Независимо от того, хэшируем ли мы одно слово или огромный файл — результат всегда одинаковой длины.
-
 ## SHA-256: Стандарт криптовалют
 
-**SHA-256** (Secure Hash Algorithm 256-bit) — алгоритм хэширования, используемый в Bitcoin и большинстве других криптовалют.
+**SHA-256** (Secure Hash Algorithm 256-bit) — алгоритм хэширования, используемый в Bitcoin.
 
-Характеристики SHA-256:
+Характеристики:
 - **256 бит** = 64 символа в hex-представлении
-- Разработан **NSA** (National Security Agency)
-- Часть семейства **SHA-2**
-- Считается криптографически стойким (на 2024 год не взломан)
+- Разработан **NSA**
+- Считается криптографически стойким
 
 ## Свойства криптографических хэш-функций
 
 ### 1. Детерминированность
 Одинаковый вход **всегда** даёт одинаковый выход.
 
-```
-sha256("Hello") = 185f8db32271fe25f561a6fc938b2e26...
-sha256("Hello") = 185f8db32271fe25f561a6fc938b2e26...  // всегда одинаково
-```
-
-### 2. Быстрое вычисление
-Hash вычисляется за миллисекунды даже для больших данных.
-
-### 3. Лавинный эффект (Avalanche Effect)
-Минимальное изменение входных данных **полностью** меняет hash.
+### 2. Лавинный эффект (Avalanche Effect)
+Минимальное изменение входа **полностью** меняет hash.
 
 ```
 sha256("Hello")  = 185f8db32271fe25f561a6fc938b2e26...
 sha256("hello")  = 2cf24dba5fb0a30e26e83b2ac5b9e29e...  // совершенно другой!
-sha256("Hello.") = 73f0dcc831c6...                      // опять другой!
 ```
 
-Изменили одну букву — получили совершенно другой hash. Это свойство критически важно для обнаружения подделок.
-
-### 4. Однонаправленность (One-way)
+### 3. Однонаправленность
 По hash **невозможно** восстановить исходные данные.
 
-```
-sha256(???) = 185f8db32271fe25f561a6fc938b2e26...
-```
-
-Единственный способ найти исходные данные — перебор всех возможных вариантов (brute force).
-
-### 5. Устойчивость к коллизиям
+### 4. Устойчивость к коллизиям
 Практически **невозможно** найти два разных входа с одинаковым hash.
-
-```
-sha256("данные A") ≠ sha256("данные B")  // почти всегда
-```
-
-Теоретически коллизии существуют (бесконечность входов → конечность выходов), но вероятность найти их случайно: 1 к 2^128 ≈ 1 к 340,000,000,000,000,000,000,000,000,000,000,000,000.
 
 ## Как hash защищает blockchain?
 
-### Защита от подделки данных
+Если злоумышленник изменит данные блока — hash изменится, и цепочка сломается.
 
-```
-Block 1:
-  data: "Alice → Bob: 100 BTC"
-  hash: abc123...
+---
 
-Block 2:
-  previousHash: abc123...
-  data: "Bob → Charlie: 50 BTC"
-  hash: def456...
-```
+## Задание
 
-Если злоумышленник изменит данные в Block 1:
+### Часть 1: Реализуй HashUtil
 
-```
-Block 1 (подделка):
-  data: "Alice → Hacker: 100 BTC"  // изменили получателя
-  hash: xyz789...                   // hash изменился!
-
-Block 2:
-  previousHash: abc123...           // НЕ СОВПАДАЕТ с новым hash Block 1!
-```
-
-Цепочка сломалась! Подделка мгновенно обнаружена.
-
-### Цепочка зависимостей
-
-Каждый hash вычисляется из:
-- index
-- timestamp
-- data
-- **previousHash** ← вот ключевой момент!
-
-```
-hash = SHA256(index + timestamp + data + previousHash)
-```
-
-Это значит:
-- Hash блока 3 зависит от hash блока 2
-- Hash блока 2 зависит от hash блока 1
-- И так далее до Genesis блока
-
-**Изменение любого блока требует пересчёта всех последующих блоков!**
-
-## Реализация в Java
+Открой `src/main/java/com/study/blockchain/core/HashUtil.java`.
 
 ```java
-import java.security.MessageDigest;
-import java.nio.charset.StandardCharsets;
-
-public class HashUtil {
-
-    public static String sha256(String input) {
+public static String sha256(String input) {
+    try {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hashBytes = digest.digest(
-            input.getBytes(StandardCharsets.UTF_8)
-        );
+        byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
         return bytesToHex(hashBytes);
-    }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder hex = new StringBuilder();
-        for (byte b : bytes) {
-            hex.append(String.format("%02x", b));
-        }
-        return hex.toString();
+    } catch (NoSuchAlgorithmException e) {
+        throw new RuntimeException("SHA-256 not available", e);
     }
 }
 ```
 
-### MessageDigest
-Java предоставляет класс `MessageDigest` для криптографических операций. Он поддерживает различные алгоритмы: MD5, SHA-1, SHA-256, SHA-512.
+### Проверь HashUtil
 
-### Кодировка
-Важно использовать `StandardCharsets.UTF_8` для консистентного преобразования строки в байты. Разные кодировки дадут разные hash!
+```bash
+./gradlew test --tests HashUtilTest
+```
 
-### Hex-представление
-Результат `digest()` — массив байтов. Мы конвертируем его в читаемую hex-строку.
+Все тесты должны пройти!
 
-## Как hash вычисляется в Block
+---
+
+### Часть 2: Добавь хэширование в Block
+
+Вернись к `Block.java` и реализуй `calculateHash()` и `updateHash()`:
 
 ```java
-public class Block {
+public String calculateHash() {
+    String input = index + String.valueOf(timestamp) + data + previousHash;
+    return HashUtil.sha256(input);
+}
 
-    public String calculateHash() {
-        String input = index
-            + String.valueOf(timestamp)
-            + data
-            + previousHash;
-        return HashUtil.sha256(input);
-    }
+public void updateHash() {
+    this.hash = calculateHash();
 }
 ```
 
-Мы конкатенируем все поля блока в строку и вычисляем от неё SHA-256.
+### Проверь Block с хэшированием
 
-## Практический эксперимент
-
-Попробуй сам в тестах:
-
-```java
-@Test
-void demonstrateAvalancheEffect() {
-    String hash1 = HashUtil.sha256("Hello");
-    String hash2 = HashUtil.sha256("hello");  // только регистр
-
-    // hash1 и hash2 совершенно разные!
-    assertNotEquals(hash1, hash2);
-}
+```bash
+./gradlew test --tests BlockTest
 ```
 
-## Почему SHA-256, а не MD5?
+Теперь все тесты Block должны пройти!
 
-| Алгоритм | Длина | Безопасность |
-|----------|-------|--------------|
-| MD5 | 128 бит | ❌ Взломан (коллизии найдены) |
-| SHA-1 | 160 бит | ❌ Взломан (2017) |
-| SHA-256 | 256 бит | ✅ Безопасен |
-| SHA-512 | 512 бит | ✅ Безопасен (избыточен для blockchain) |
+---
 
-MD5 и SHA-1 больше не считаются безопасными — для них найдены способы создания коллизий.
+## Проверь себя
+
+Запусти все тесты:
+
+```bash
+./gradlew test --tests HashUtilTest --tests BlockTest
+```
+
+Если застрял:
+```bash
+git checkout solutions -- src/main/java/com/study/blockchain/core/HashUtil.java
+git checkout solutions -- src/main/java/com/study/blockchain/core/Block.java
+```
+
+---
 
 ## Ключевые термины
 
 | Термин | Описание |
 |--------|----------|
-| Hash | Результат хэш-функции, "отпечаток" данных |
+| Hash | Результат хэш-функции |
 | SHA-256 | Криптографический алгоритм, 256-битный hash |
 | Avalanche Effect | Малое изменение входа → полное изменение hash |
-| Collision | Два разных входа с одинаковым hash (крайне редко) |
-| One-way Function | Функция, которую нельзя обратить |
+| MessageDigest | Java класс для хэширования |
 
 ## Что дальше?
 
-В следующем уроке мы соберём блоки в **цепочку (Blockchain)** и увидим, как hash связывает их воедино.
+В следующем уроке соберём блоки в **цепочку (Blockchain)**.

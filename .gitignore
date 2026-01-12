@@ -34,3 +34,4 @@ replay_pid*
 
 # Claude Code temp files
 tmpclaude-*
+.claude/

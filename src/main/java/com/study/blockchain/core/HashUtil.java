@@ -7,43 +7,44 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Утилита для криптографического хэширования.
  *
- * Использует алгоритм SHA-256, который:
- * - Генерирует 256-битный (64 символа hex) hash
- * - Является однонаправленным (нельзя восстановить исходные данные)
- * - Детерминированным (одинаковый вход = одинаковый выход)
- * - Лавинным (малое изменение входа = полное изменение выхода)
+ * ЗАДАНИЕ (Урок 2):
+ * Реализуй метод sha256() согласно инструкциям в lessons/02-hashing.md
  *
- * Подробнее о хэшировании — в уроке 2.
+ * После реализации запусти тесты:
+ *   ./gradlew test --tests HashUtilTest
  */
 public final class HashUtil {
 
     private HashUtil() {
-        // Utility class, не должен инстанцироваться
+        // Utility class
     }
 
     /**
-     * Вычисляет SHA-256 hash строки.
+     * TODO: Вычисляет SHA-256 hash строки.
+     *
+     * Алгоритм:
+     * 1. Получи MessageDigest для "SHA-256"
+     * 2. Преобразуй input в байты (используй StandardCharsets.UTF_8)
+     * 3. Вычисли hash через digest()
+     * 4. Преобразуй байты в hex-строку через bytesToHex()
      *
      * @param input входная строка
      * @return 64-символьный hex-encoded hash
-     * @throws RuntimeException если алгоритм SHA-256 недоступен
      */
     public static String sha256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            return bytesToHex(hashBytes);
-        } catch (NoSuchAlgorithmException e) {
-            // SHA-256 должен быть доступен во всех JVM
-            throw new RuntimeException("SHA-256 algorithm not available", e);
-        }
+        // TODO: Реализуй SHA-256 хэширование
+        //
+        // Подсказка:
+        // MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        // byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+        // return bytesToHex(hashBytes);
+
+        throw new UnsupportedOperationException("Реализуй sha256");
     }
 
     /**
      * Конвертирует массив байтов в hex-строку.
-     *
-     * @param bytes массив байтов
-     * @return hex-представление (lowercase)
+     * Этот метод уже реализован — используй его в sha256().
      */
     private static String bytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder(2 * bytes.length);

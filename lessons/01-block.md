@@ -63,38 +63,97 @@ Block 1.previousHash = Genesis.hash
 2. Block 2.previousHash больше не будет совпадать с Block 1.hash
 3. Подделка обнаружена!
 
-Чтобы подделать один блок, нужно пересчитать все последующие блоки. В реальных blockchain это практически невозможно благодаря Proof-of-Work (урок 8).
+---
 
-## Структура класса Block
+## Задание
+
+Открой файл `src/main/java/com/study/blockchain/core/Block.java` и реализуй класс.
+
+### Шаг 1: Добавь поля
 
 ```java
-public class Block {
-    private int index;           // Порядковый номер
-    private long timestamp;      // Время создания
-    private String data;         // Данные (позже — транзакции)
-    private String previousHash; // Hash предыдущего блока
-    private String hash;         // Hash текущего блока
+private final int index;
+private final long timestamp;
+private String data;
+private String previousHash;
+private String hash;
+```
+
+### Шаг 2: Реализуй конструктор
+
+```java
+public Block(int index, long timestamp, String data, String previousHash) {
+    this.index = index;
+    this.timestamp = timestamp;
+    this.data = data;
+    this.previousHash = previousHash;
+    this.hash = "";  // пока пустой, вычислим в уроке 2
 }
 ```
 
-## Что мы напишем в этом уроке
+### Шаг 3: Реализуй createGenesisBlock
 
-1. Класс `Block` с базовыми полями
-2. Конструкторы для создания обычного блока и Genesis блока
-3. Геттеры для всех полей
-4. Метод `toString()` для удобного вывода
+```java
+public static Block createGenesisBlock(String data) {
+    return new Block(0, System.currentTimeMillis(), data, GENESIS_PREV_HASH);
+}
+```
 
-> **Примечание:** Метод `calculateHash()` мы добавим в следующем уроке, когда изучим хэширование. Пока hash будет передаваться через конструктор.
+### Шаг 4: Добавь геттеры
 
-## Практика
+Реализуй все методы `getIndex()`, `getTimestamp()`, `getData()`, `getPreviousHash()`, `getHash()`.
 
-После изучения теории открой файл:
-- `src/main/java/com/study/blockchain/core/Block.java`
+### Шаг 5: Реализуй setHash и вспомогательные методы
 
-Изучи код и попробуй ответить на вопросы:
-1. Почему index начинается с 0?
-2. Что произойдёт, если изменить data в блоке?
-3. Зачем хранить timestamp?
+```java
+public void setHash(String hash) {
+    this.hash = hash;
+}
+
+void setDataForTesting(String data) {
+    this.data = data;
+}
+
+void setPreviousHashForTesting(String previousHash) {
+    this.previousHash = previousHash;
+}
+```
+
+### Шаг 6: Реализуй toString
+
+```java
+@Override
+public String toString() {
+    return "Block{" +
+            "index=" + index +
+            ", timestamp=" + timestamp +
+            ", data='" + data + '\'' +
+            ", previousHash='" + previousHash + '\'' +
+            ", hash='" + hash + '\'' +
+            '}';
+}
+```
+
+### Шаг 7 (пока пропусти): calculateHash и updateHash
+
+Эти методы реализуем в уроке 2, когда изучим хэширование. Пока оставь `throw new UnsupportedOperationException(...)`.
+
+---
+
+## Проверь себя
+
+Запусти тесты для Block (пока пройдут только базовые):
+
+```bash
+./gradlew test --tests BlockTest
+```
+
+Если застрял — посмотри готовое решение:
+```bash
+git checkout solutions -- src/main/java/com/study/blockchain/core/Block.java
+```
+
+---
 
 ## Ключевые термины
 
@@ -108,4 +167,4 @@ public class Block {
 
 ## Что дальше?
 
-В следующем уроке мы изучим **хэширование (SHA-256)** и научимся вычислять hash блока автоматически.
+В следующем уроке изучим **хэширование (SHA-256)** и реализуем `calculateHash()`.

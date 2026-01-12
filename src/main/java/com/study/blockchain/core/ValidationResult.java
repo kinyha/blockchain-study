@@ -3,8 +3,11 @@ package com.study.blockchain.core;
 /**
  * Результат валидации blockchain.
  *
- * Содержит информацию о том, валидна ли цепочка,
- * и если нет — какой блок невалиден и почему.
+ * Этот класс уже реализован — используй его в Blockchain.validateDetailed()
+ *
+ * Пример использования:
+ *   return ValidationResult.success();                           // цепочка валидна
+ *   return ValidationResult.failure(2, "Block 2 hash mismatch"); // ошибка в блоке 2
  */
 public class ValidationResult {
 
@@ -35,25 +38,14 @@ public class ValidationResult {
         return new ValidationResult(false, blockIndex, message);
     }
 
-    /**
-     * Возвращает true, если цепочка валидна.
-     */
     public boolean isValid() {
         return valid;
     }
 
-    /**
-     * Возвращает индекс первого невалидного блока.
-     * Возвращает -1, если цепочка валидна.
-     */
     public int getInvalidBlockIndex() {
         return invalidBlockIndex;
     }
 
-    /**
-     * Возвращает описание ошибки.
-     * Возвращает null, если цепочка валидна.
-     */
     public String getErrorMessage() {
         return errorMessage;
     }

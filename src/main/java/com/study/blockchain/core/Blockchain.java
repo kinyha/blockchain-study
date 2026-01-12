@@ -7,178 +7,124 @@ import java.util.List;
 /**
  * Blockchain — цепочка блоков, связанных криптографическими hash-ами.
  *
- * Основные свойства:
- * - Каждый блок содержит hash предыдущего блока (кроме Genesis)
- * - Изменение любого блока делает невалидными все последующие
- * - Обеспечивает immutability (неизменяемость) данных
+ * ЗАДАНИЕ (Урок 3):
+ * Реализуй этот класс согласно инструкциям в lessons/03-blockchain.md
  *
- * @see Block
- * @see HashUtil
+ * После реализации запусти тесты:
+ *   ./gradlew test --tests BlockchainTest
  */
 public class Blockchain {
 
     private static final String GENESIS_DATA = "Genesis Block";
 
-    private final List<Block> chain;
+    // TODO (Шаг 1): Добавь поле для хранения цепочки
+    // private List<Block> chain;
 
     /**
-     * Создаёт новый blockchain с Genesis блоком.
+     * TODO (Шаг 2): Создаёт новый blockchain с Genesis блоком.
+     *
+     * 1. Инициализируй chain как new ArrayList<>()
+     * 2. Вызови createGenesisBlock()
      */
     public Blockchain() {
-        this.chain = new ArrayList<>();
-        createGenesisBlock();
+        // TODO: Инициализируй chain и создай Genesis блок
+        throw new UnsupportedOperationException("Реализуй конструктор Blockchain");
     }
 
     /**
-     * Создаёт Genesis блок и добавляет его в цепочку.
-     * Genesis — первый блок, у которого previousHash = "0".
+     * TODO (Шаг 3): Создаёт Genesis блок и добавляет его в цепочку.
      */
     private void createGenesisBlock() {
-        Block genesis = Block.createGenesisBlock(GENESIS_DATA);
-        genesis.updateHash();
-        chain.add(genesis);
+        // TODO:
+        // 1. Создай Genesis блок через Block.createGenesisBlock(GENESIS_DATA)
+        // 2. Вызови genesis.updateHash()
+        // 3. Добавь в chain
+        throw new UnsupportedOperationException("Реализуй createGenesisBlock");
     }
 
     /**
-     * Добавляет новый блок с данными в цепочку.
+     * TODO (Шаг 4): Добавляет новый блок с данными в цепочку.
      *
-     * @param data данные для нового блока
-     * @return созданный блок
+     * 1. Получи последний блок через getLatestBlock()
+     * 2. Вычисли newIndex = lastBlock.getIndex() + 1
+     * 3. Получи previousHash = lastBlock.getHash()
+     * 4. Создай новый Block
+     * 5. Вызови newBlock.updateHash()
+     * 6. Добавь в chain
+     * 7. Верни созданный блок
      */
     public Block addBlock(String data) {
-        Block lastBlock = getLatestBlock();
-
-        int newIndex = lastBlock.getIndex() + 1;
-        long timestamp = System.currentTimeMillis();
-        String previousHash = lastBlock.getHash();
-
-        Block newBlock = new Block(newIndex, timestamp, data, previousHash);
-        newBlock.updateHash();
-
-        chain.add(newBlock);
-        return newBlock;
+        // TODO: Реализуй добавление блока
+        throw new UnsupportedOperationException("Реализуй addBlock");
     }
 
     /**
-     * Возвращает последний блок в цепочке.
-     *
-     * @return последний блок
+     * TODO (Шаг 5): Возвращает последний блок в цепочке.
      */
     public Block getLatestBlock() {
-        return chain.get(chain.size() - 1);
+        // TODO: return chain.get(chain.size() - 1)
+        throw new UnsupportedOperationException("Реализуй getLatestBlock");
     }
 
     /**
-     * Возвращает блок по индексу.
-     *
-     * @param index индекс блока (0 = Genesis)
-     * @return блок с указанным индексом
-     * @throws IndexOutOfBoundsException если индекс вне диапазона
+     * TODO: Возвращает блок по индексу.
      */
     public Block getBlock(int index) {
-        return chain.get(index);
+        // TODO: return chain.get(index)
+        throw new UnsupportedOperationException("Реализуй getBlock");
     }
 
     /**
-     * Возвращает неизменяемую копию цепочки блоков.
-     *
-     * @return список блоков (только для чтения)
+     * TODO: Возвращает неизменяемую копию цепочки.
      */
     public List<Block> getChain() {
-        return Collections.unmodifiableList(chain);
+        // TODO: return Collections.unmodifiableList(chain)
+        throw new UnsupportedOperationException("Реализуй getChain");
     }
 
     /**
-     * Возвращает количество блоков в цепочке.
-     *
-     * @return размер цепочки (включая Genesis)
+     * TODO: Возвращает количество блоков в цепочке.
      */
     public int size() {
-        return chain.size();
+        // TODO: return chain.size()
+        throw new UnsupportedOperationException("Реализуй size");
     }
 
     /**
-     * Возвращает высоту цепочки (индекс последнего блока).
-     * Height = size - 1, так как Genesis имеет index = 0.
-     *
-     * @return высота цепочки
+     * TODO: Возвращает высоту цепочки (индекс последнего блока).
      */
     public int getHeight() {
-        return chain.size() - 1;
+        // TODO: return chain.size() - 1
+        throw new UnsupportedOperationException("Реализуй getHeight");
     }
 
     /**
-     * Проверяет, является ли цепочка валидной.
-     *
-     * Валидация проверяет:
-     * 1. Hash каждого блока соответствует его данным
-     * 2. previousHash каждого блока совпадает с hash предыдущего
-     * 3. Genesis блок имеет корректный previousHash ("0")
-     *
-     * Подробнее о валидации — в уроке 4.
-     *
-     * @return true если цепочка валидна, false если обнаружена подделка
+     * TODO (Урок 4): Проверяет валидность цепочки.
      */
     public boolean isValid() {
-        return validateDetailed().isValid();
+        // TODO: return validateDetailed().isValid()
+        throw new UnsupportedOperationException("Реализуй isValid (Урок 4)");
     }
 
     /**
-     * Выполняет детальную валидацию цепочки.
+     * TODO (Урок 4): Выполняет детальную валидацию цепочки.
      *
-     * В отличие от isValid(), возвращает подробную информацию об ошибке:
-     * - Индекс невалидного блока
-     * - Описание проблемы
+     * Проверки:
+     * 1. Genesis: previousHash == "0" и hash соответствует данным
+     * 2. Остальные блоки:
+     *    a) hash == calculateHash() (данные не изменены)
+     *    b) previousHash == предыдущий блок.hash (цепочка не разорвана)
      *
-     * @return результат валидации с деталями
      * @see ValidationResult
      */
     public ValidationResult validateDetailed() {
-        // Проверяем Genesis блок
-        Block genesis = chain.get(0);
-        if (!genesis.getPreviousHash().equals(Block.GENESIS_PREV_HASH)) {
-            return ValidationResult.failure(0,
-                    "Genesis block has invalid previousHash: expected '" +
-                    Block.GENESIS_PREV_HASH + "', got '" + genesis.getPreviousHash() + "'");
-        }
-        if (!genesis.getHash().equals(genesis.calculateHash())) {
-            return ValidationResult.failure(0,
-                    "Genesis block hash mismatch: data has been tampered");
-        }
-
-        // Проверяем остальные блоки
-        for (int i = 1; i < chain.size(); i++) {
-            Block currentBlock = chain.get(i);
-            Block previousBlock = chain.get(i - 1);
-
-            // Проверка 1: hash блока соответствует его данным
-            if (!currentBlock.getHash().equals(currentBlock.calculateHash())) {
-                return ValidationResult.failure(i,
-                        "Block " + i + " hash mismatch: data has been tampered");
-            }
-
-            // Проверка 2: previousHash указывает на hash предыдущего блока
-            if (!currentBlock.getPreviousHash().equals(previousBlock.getHash())) {
-                return ValidationResult.failure(i,
-                        "Block " + i + " chain break: previousHash doesn't match block " + (i - 1) + " hash");
-            }
-        }
-
-        return ValidationResult.success();
+        // TODO: Реализуй валидацию согласно lessons/04-validation.md
+        throw new UnsupportedOperationException("Реализуй validateDetailed (Урок 4)");
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Blockchain {\n");
-        sb.append("  size: ").append(size()).append("\n");
-        sb.append("  height: ").append(getHeight()).append("\n");
-        sb.append("  valid: ").append(isValid()).append("\n");
-        sb.append("  blocks:\n");
-        for (Block block : chain) {
-            sb.append("    ").append(block).append("\n");
-        }
-        sb.append("}");
-        return sb.toString();
+        // TODO: Верни информацию о blockchain
+        throw new UnsupportedOperationException("Реализуй toString");
     }
 }
