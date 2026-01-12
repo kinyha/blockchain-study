@@ -32,14 +32,13 @@ public final class HashUtil {
      * @return 64-символьный hex-encoded hash
      */
     public static String sha256(String input) {
-        // TODO: Реализуй SHA-256 хэширование
-        //
-        // Подсказка:
-        // MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        // byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-        // return bytesToHex(hashBytes);
-
-        throw new UnsupportedOperationException("Реализуй sha256");
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return bytesToHex(hashBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
     }
 
     /**

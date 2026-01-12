@@ -76,7 +76,7 @@ class ValidationTest {
             block2.setDataForTesting("Tampered data");
 
             ValidationResult result = blockchain.validateDetailed();
-
+            System.out.println(result);
             assertFalse(result.isValid());
             assertEquals(2, result.getInvalidBlockIndex());
             assertTrue(result.getErrorMessage().contains("hash mismatch"));

@@ -97,6 +97,8 @@ class BlockchainTest {
         for (int i = 1; i < blockchain.size(); i++) {
             Block current = blockchain.getBlock(i);
             Block previous = blockchain.getBlock(i - 1);
+            System.out.println(current);
+            System.out.println(previous);
 
             assertEquals(previous.getHash(), current.getPreviousHash(),
                     "Block " + i + " should reference hash of block " + (i - 1));

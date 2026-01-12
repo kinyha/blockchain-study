@@ -45,6 +45,9 @@ class HashUtilTest {
         String hash1 = HashUtil.sha256("Hello");
         String hash2 = HashUtil.sha256("hello");  // только регистр первой буквы
 
+        System.out.println(hash1);
+        System.out.println(hash2);
+
         assertNotEquals(hash1, hash2);
 
         // Проверяем, что hash-и отличаются существенно (не только несколькими символами)

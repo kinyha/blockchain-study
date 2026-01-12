@@ -16,105 +16,81 @@ public class Block {
      */
     public static final String GENESIS_PREV_HASH = "0";
 
-    // TODO (Шаг 1): Добавь приватные поля
-    // - index: int — порядковый номер блока
-    // - timestamp: long — время создания (миллисекунды)
-    // - data: String — данные блока
-    // - previousHash: String — hash предыдущего блока
-    // - hash: String — hash текущего блока
+    private final int index;
+    private final long timestamp;
+    private String data;
+    private String previousHash;
+    private String hash;
 
-    /**
-     * TODO (Шаг 2): Реализуй конструктор
-     *
-     * @param index        порядковый номер блока (0 для Genesis)
-     * @param timestamp    время создания в миллисекундах
-     * @param data         данные блока
-     * @param previousHash hash предыдущего блока ("0" для Genesis)
-     */
+
     public Block(int index, long timestamp, String data, String previousHash) {
-        // TODO: Инициализируй все поля
-        // TODO: hash изначально пустая строка ""
-        throw new UnsupportedOperationException("Реализуй конструктор Block");
+        this.index = index;
+        this.timestamp = timestamp;
+        this.data = data;
+        this.previousHash = previousHash;
+        this.hash = "";
     }
 
-    /**
-     * TODO (Шаг 3): Создай статический метод для Genesis блока
-     *
-     * Genesis блок:
-     * - index = 0
-     * - timestamp = текущее время (System.currentTimeMillis())
-     * - previousHash = GENESIS_PREV_HASH ("0")
-     */
     public static Block createGenesisBlock(String data) {
-        // TODO: Верни новый Block с параметрами Genesis
-        throw new UnsupportedOperationException("Реализуй createGenesisBlock");
+        return new Block(0, System.currentTimeMillis(),data,GENESIS_PREV_HASH);
     }
 
-    /**
-     * TODO (Шаг 4 — после урока 2): Вычисляет hash блока
-     *
-     * Hash = SHA256(index + timestamp + data + previousHash)
-     * Используй HashUtil.sha256()
-     */
     public String calculateHash() {
-        // TODO: Собери строку из всех полей и верни её hash
-        throw new UnsupportedOperationException("Реализуй calculateHash (Урок 2)");
+        String input = index + String.valueOf(timestamp) + data + previousHash;
+        return HashUtil.sha256(input);
     }
 
     /**
      * Пересчитывает и устанавливает hash блока.
      */
     public void updateHash() {
-        // TODO: this.hash = calculateHash()
-        throw new UnsupportedOperationException("Реализуй updateHash");
+        this.hash = calculateHash();
     }
 
-    // TODO (Шаг 5): Добавь геттеры для всех полей
-    // getIndex(), getTimestamp(), getData(), getPreviousHash(), getHash()
-
     public int getIndex() {
-        throw new UnsupportedOperationException("Реализуй getIndex");
+        return this.index;
     }
 
     public long getTimestamp() {
-        throw new UnsupportedOperationException("Реализуй getTimestamp");
+        return this.timestamp;
     }
 
     public String getData() {
-        throw new UnsupportedOperationException("Реализуй getData");
+        return this.data;
     }
 
     public String getPreviousHash() {
-        throw new UnsupportedOperationException("Реализуй getPreviousHash");
+        return this.previousHash;
     }
 
     public String getHash() {
-        throw new UnsupportedOperationException("Реализуй getHash");
+        return this.hash;
     }
 
     /**
      * Устанавливает hash блока.
      */
     public void setHash(String hash) {
-        // TODO: this.hash = hash
-        throw new UnsupportedOperationException("Реализуй setHash");
+        this.hash = hash;
     }
 
     // Для тестирования атак (Урок 4)
     void setDataForTesting(String data) {
-        // TODO: this.data = data
-        throw new UnsupportedOperationException("Реализуй setDataForTesting");
+        this.data = data;
     }
 
     void setPreviousHashForTesting(String previousHash) {
-        // TODO: this.previousHash = previousHash
-        throw new UnsupportedOperationException("Реализуй setPreviousHashForTesting");
+        this.previousHash = previousHash;
     }
 
     @Override
     public String toString() {
-        // TODO (Шаг 6): Верни строку вида:
-        // "Block{index=0, timestamp=123, data='...', previousHash='...', hash='...'}"
-        throw new UnsupportedOperationException("Реализуй toString");
+        return "Block{" +
+                "index=" + index +
+                ", timestamp=" + timestamp +
+                ", data='" + data + '\'' +
+                ", previousHash='" + previousHash + '\'' +
+                ", hash='" + hash + '\'' +
+                '}';
     }
 }
