@@ -17,6 +17,7 @@
 | 2 | Hashing | [02-hashing.md](lessons/02-hashing.md) | `HashUtil.java` + `Block.calculateHash()` |
 | 3 | Blockchain | [03-blockchain.md](lessons/03-blockchain.md) | `Blockchain.java` |
 | 4 | Validation | [04-validation.md](lessons/04-validation.md) | `Blockchain.isValid()` |
+| 5 | Transactions | [05-transactions.md](lessons/05-transactions.md) | `Transaction.java`, `TransactionInput.java`, `TransactionOutput.java` |
 
 ## Быстрый старт
 
@@ -35,9 +36,10 @@ cat lessons/01-block.md
 ## Структура проекта
 
 ```
-lessons/                 # Теория (читай по порядку)
-src/main/java/.../core/  # Код (твоя работа)
-src/test/java/.../core/  # Тесты (запускай для проверки)
+lessons/                       # Теория (читай по порядку)
+src/main/java/.../core/        # Блок, цепочка, хэширование
+src/main/java/.../transaction/ # Транзакции (урок 5+)
+src/test/java/...              # Тесты (запускай для проверки)
 ```
 
 ## Если застрял
