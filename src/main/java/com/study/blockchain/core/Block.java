@@ -21,6 +21,7 @@ public class Block {
     private String data;
     private String previousHash;
     private String hash;
+    private long nonce;
 
 
     public Block(int index, long timestamp, String data, String previousHash) {
@@ -36,7 +37,8 @@ public class Block {
     }
 
     public String calculateHash() {
-        String input = index + String.valueOf(timestamp) + data + previousHash;
+        // Урок 8: nonce добавляется для Proof-of-Work
+        String input = index + String.valueOf(timestamp) + data + previousHash + nonce;
         return HashUtil.sha256(input);
     }
 
@@ -72,6 +74,18 @@ public class Block {
      */
     public void setHash(String hash) {
         this.hash = hash;
+    }
+
+    public long getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(long nonce) {
+        this.nonce = nonce;
+    }
+
+    public void incrementNonce() {
+        this.nonce++;
     }
 
     // Для тестирования атак (Урок 4)
