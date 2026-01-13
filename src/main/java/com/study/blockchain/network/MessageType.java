@@ -1,9 +1,5 @@
 package com.study.blockchain.network;
 
-/**
- * Типы сообщений P2P протокола.
- * Задание: lessons/10-network.md
- */
 public enum MessageType {
     HANDSHAKE,
     NEW_BLOCK,

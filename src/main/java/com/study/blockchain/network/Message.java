@@ -2,10 +2,6 @@ package com.study.blockchain.network;
 
 import com.google.gson.Gson;
 
-/**
- * Сообщение P2P протокола.
- * Задание: lessons/10-network.md
- */
 public class Message {
 
     private static final Gson gson = new Gson();
@@ -15,18 +11,17 @@ public class Message {
     private long timestamp;
 
     public Message(MessageType type, String payload) {
-        // TODO: Инициализируй поля, timestamp = System.currentTimeMillis()
-        throw new UnsupportedOperationException("Реализуй конструктор Message");
+        this.type = type;
+        this.payload = payload;
+        this.timestamp = System.currentTimeMillis();
     }
 
     public String toJson() {
-        // TODO: Сериализуй в JSON через Gson
-        throw new UnsupportedOperationException("Реализуй toJson");
+        return gson.toJson(this);
     }
 
     public static Message fromJson(String json) {
-        // TODO: Десериализуй из JSON
-        throw new UnsupportedOperationException("Реализуй fromJson");
+        return gson.fromJson(json, Message.class);
     }
 
     public MessageType getType() {

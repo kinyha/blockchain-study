@@ -11,30 +11,30 @@ public class ProofOfWork {
     private final int difficulty;
 
     public ProofOfWork(int difficulty) {
-        // TODO: Сохрани difficulty
-        throw new UnsupportedOperationException("Реализуй конструктор ProofOfWork");
+        this.difficulty = difficulty;
     }
 
     public String getTarget() {
-        // TODO: Верни строку из difficulty нулей
-        // Например для difficulty=4: "0000"
-        throw new UnsupportedOperationException("Реализуй getTarget");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < difficulty; i++) {
+            sb.append("0");
+        }
+        return sb.toString();
     }
 
     public void mine(Block block) {
-        // TODO: Перебирай nonce пока hash не начнётся с target
-        // block.setNonce(0);
-        // block.updateHash();
-        // while (!block.getHash().startsWith(target)) {
-        //     block.incrementNonce();
-        //     block.updateHash();
-        // }
-        throw new UnsupportedOperationException("Реализуй mine");
+        String target = getTarget();
+        block.setNonce(0);
+        block.updateHash();
+
+        while (!block.getHash().startsWith(target)) {
+            block.incrementNonce();
+            block.updateHash();
+        }
     }
 
     public boolean isValidProof(Block block) {
-        // TODO: Проверь что hash блока начинается с target
-        throw new UnsupportedOperationException("Реализуй isValidProof");
+        return block.getHash().startsWith(getTarget());
     }
 
     public int getDifficulty() {

@@ -37,7 +37,6 @@ public class Block {
     }
 
     public String calculateHash() {
-        // Урок 8: nonce добавляется для Proof-of-Work
         String input = index + String.valueOf(timestamp) + data + previousHash + nonce;
         return HashUtil.sha256(input);
     }

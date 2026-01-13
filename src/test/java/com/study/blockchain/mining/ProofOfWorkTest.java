@@ -46,10 +46,15 @@ class ProofOfWorkTest {
         @Test
         @DisplayName("майнит блок до валидного hash")
         void minesBlock() {
-            Block block = new Block(1, System.currentTimeMillis(), "Test data", "0");
-            ProofOfWork pow = new ProofOfWork(2);
 
+            Block block = new Block(1, System.currentTimeMillis(), "Test data", "0");
+            ProofOfWork pow = new ProofOfWork(9);
+
+            long start = System.currentTimeMillis();
             pow.mine(block);
+            long elapsed = System.currentTimeMillis() - start;
+
+            System.out.println("Mining time: " + elapsed + "ms, nonce=" + block.getNonce() + ", hash=" + block.getHash());
 
             assertTrue(block.getHash().startsWith("00"));
         }

@@ -1,6 +1,7 @@
 package com.study.blockchain.wallet;
 
 import com.study.blockchain.core.HashUtil;
+
 import java.security.*;
 import java.util.Base64;
 
@@ -14,34 +15,42 @@ public class Wallet {
     private PublicKey publicKey;
 
     public Wallet() {
-        // TODO: Сгенерируй ключевую пару ECDSA
-        // KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-        // keyGen.initialize(256);
-        // KeyPair pair = keyGen.generateKeyPair();
-        throw new UnsupportedOperationException("Реализуй конструктор Wallet");
-    }
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+            keyGen.initialize(256);
+            KeyPair pair = keyGen.generateKeyPair();
+            this.privateKey = pair.getPrivate();
+            this.publicKey = pair.getPublic();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("EC algorith now available", e);
+        }
 
-    public byte[] sign(byte[] data) {
-        // TODO: Подпиши данные приватным ключом
-        // Signature sig = Signature.getInstance("SHA256withECDSA");
-        // sig.initSign(privateKey);
-        // sig.update(data);
-        // return sig.sign();
-        throw new UnsupportedOperationException("Реализуй sign");
     }
 
     public static boolean verify(PublicKey publicKey, byte[] data, byte[] signature) {
-        // TODO: Проверь подпись публичным ключом
-        // Signature sig = Signature.getInstance("SHA256withECDSA");
-        // sig.initVerify(publicKey);
-        // sig.update(data);
-        // return sig.verify(signature);
-        throw new UnsupportedOperationException("Реализуй verify");
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initVerify(publicKey);
+            sig.update(data);
+            return sig.verify(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            return false;
+        }
+    }
+
+    public byte[] sign(byte[] data) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initSign(privateKey);
+            sig.update(data);
+            return sig.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new RuntimeException("Signing failed", e);
+        }
     }
 
     public String getAddress() {
-        // TODO: Верни sha256 от publicKey.getEncoded()
-        throw new UnsupportedOperationException("Реализуй getAddress");
+        return HashUtil.sha256(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
     }
 
     public PrivateKey getPrivateKey() {

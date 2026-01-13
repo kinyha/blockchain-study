@@ -3,10 +3,6 @@ package com.study.blockchain.network;
 import java.io.*;
 import java.net.Socket;
 
-/**
- * Соединение с peer узлом.
- * Задание: lessons/10-network.md
- */
 public class PeerConnection {
 
     private Socket socket;
@@ -14,24 +10,32 @@ public class PeerConnection {
     private PrintWriter writer;
     private String peerId;
 
-    public PeerConnection(Socket socket) {
-        // TODO: Сохрани socket, создай reader/writer из streams
-        throw new UnsupportedOperationException("Реализуй конструктор PeerConnection");
+    public PeerConnection(Socket socket) throws IOException {
+        this.socket = socket;
+        this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
     }
 
     public void send(Message message) {
-        // TODO: Отправь message.toJson() + newline
-        throw new UnsupportedOperationException("Реализуй send");
+        writer.println(message.toJson());
     }
 
-    public Message receive() {
-        // TODO: Прочитай строку и Message.fromJson()
-        throw new UnsupportedOperationException("Реализуй receive");
+    public Message receive() throws IOException {
+        String json = reader.readLine();
+        if (json == null) {
+            return null;
+        }
+        return Message.fromJson(json);
     }
 
     public void close() {
-        // TODO: Закрой socket и streams
-        throw new UnsupportedOperationException("Реализуй close");
+        try {
+            if (reader != null) reader.close();
+            if (writer != null) writer.close();
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            // Ignore close errors
+        }
     }
 
     public boolean isConnected() {

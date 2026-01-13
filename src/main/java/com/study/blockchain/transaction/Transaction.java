@@ -3,6 +3,7 @@ package com.study.blockchain.transaction;
 import com.study.blockchain.core.HashUtil;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -95,13 +96,21 @@ public class Transaction {
 
     // Урок 7: Подпись транзакций
     public void signAllInputs(PrivateKey privateKey) {
-        // TODO: Подпиши все inputs приватным ключом
-        throw new UnsupportedOperationException("Реализуй signAllInputs (Урок 7)");
+        for (TransactionInput input : inputs) {
+            input.sign(privateKey);
+        }
     }
 
     public boolean verifySignatures() {
-        // TODO: Проверь подписи всех inputs
-        // Для каждого input: publicKey = input.getUTXO().getRecipientPublicKey()
-        throw new UnsupportedOperationException("Реализуй verifySignatures (Урок 7)");
+        for (TransactionInput input : inputs) {
+            if (input.getUTXO() == null) {
+                return false;
+            }
+            PublicKey publicKey = input.getUTXO().getRecipientPublicKey();
+            if (!input.verifySignature(publicKey)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -38,16 +38,27 @@ public class TransactionInput {
 
     // Урок 7: Подпись транзакций
     public void sign(PrivateKey privateKey) {
-        // TODO: Подпиши transactionOutputId приватным ключом
-        // Signature sig = Signature.getInstance("SHA256withECDSA");
-        // sig.initSign(privateKey);
-        // sig.update(transactionOutputId.getBytes());
-        // this.signature = sig.sign();
-        throw new UnsupportedOperationException("Реализуй sign (Урок 7)");
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initSign(privateKey);
+            sig.update(transactionOutputId.getBytes());
+            this.signature = sig.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new RuntimeException("Signing failed", e);
+        }
     }
 
     public boolean verifySignature(PublicKey publicKey) {
-        // TODO: Проверь подпись публичным ключом
-        throw new UnsupportedOperationException("Реализуй verifySignature (Урок 7)");
+        if (signature == null) {
+            return false;
+        }
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initVerify(publicKey);
+            sig.update(transactionOutputId.getBytes());
+            return sig.verify(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            return false;
+        }
     }
 }
