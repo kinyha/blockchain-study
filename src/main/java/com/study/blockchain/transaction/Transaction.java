@@ -17,14 +17,17 @@ public class Transaction {
     private String transactionId;
     private List<TransactionInput> inputs;
     private List<TransactionOutput> outputs;
+    private long timestamp;
 
     public Transaction() {
         this.inputs = new ArrayList<>();
         this.outputs = new ArrayList<>();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public String calculateHash() {
         StringBuilder sb = new StringBuilder();
+        sb.append(timestamp);
 
         for (TransactionInput input : inputs) {
             sb.append(input.getTransactionOutputId());
@@ -92,6 +95,10 @@ public class Transaction {
 
     public List<TransactionOutput> getOutputs() {
         return outputs;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     // Урок 7: Подпись транзакций

@@ -9,8 +9,13 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import com.study.blockchain.transaction.TransactionOutput;
 
 public class Node {
 
@@ -24,6 +29,14 @@ public class Node {
     private final String nodeId;
     private volatile boolean running;
 
+    // Listeners for UI updates
+    private Runnable onBlockReceived;
+    private Runnable onPeerConnected;
+    private Runnable onWalletReceived;
+
+    // Known peer wallets: address -> PublicKey
+    private final Map<String, PublicKey> peerWallets = new ConcurrentHashMap<>();
+
     public Node(Blockchain blockchain, UTXOPool utxoPool) {
         this.blockchain = blockchain;
         this.utxoPool = utxoPool;
@@ -31,6 +44,40 @@ public class Node {
         this.peers = new CopyOnWriteArrayList<>();
         this.nodeId = UUID.randomUUID().toString().substring(0, 8);
         this.running = false;
+    }
+
+    public void setOnBlockReceived(Runnable callback) {
+        this.onBlockReceived = callback;
+    }
+
+    public void setOnPeerConnected(Runnable callback) {
+        this.onPeerConnected = callback;
+    }
+
+    public void setOnWalletReceived(Runnable callback) {
+        this.onWalletReceived = callback;
+    }
+
+    public Map<String, PublicKey> getPeerWallets() {
+        return peerWallets;
+    }
+
+    public void broadcastWalletInfo(PublicKey publicKey, String address) {
+        String pubKeyBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+        String payload = gson.toJson(Map.of(
+            "address", address,
+            "publicKey", pubKeyBase64
+        ));
+        broadcast(new Message(MessageType.WALLET_INFO, payload));
+
+        // Also broadcast all known peer wallets
+        for (Map.Entry<String, PublicKey> entry : peerWallets.entrySet()) {
+            String peerPayload = gson.toJson(Map.of(
+                "address", entry.getKey(),
+                "publicKey", Base64.getEncoder().encodeToString(entry.getValue().getEncoded())
+            ));
+            broadcast(new Message(MessageType.WALLET_INFO, peerPayload));
+        }
     }
 
     public void start(int port) throws IOException {
@@ -100,15 +147,20 @@ public class Node {
     }
 
     public void broadcastBlock(Block block) {
-        String payload = gson.toJson(Map.of(
-            "index", block.getIndex(),
-            "timestamp", block.getTimestamp(),
-            "data", block.getData(),
-            "previousHash", block.getPreviousHash(),
-            "hash", block.getHash(),
-            "nonce", block.getNonce()
-        ));
-        broadcast(new Message(MessageType.NEW_BLOCK, payload));
+        broadcastBlockWithOutputs(block, List.of());
+    }
+
+    public void broadcastBlockWithOutputs(Block block, List<Map<String, Object>> outputs) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("index", block.getIndex());
+        payload.put("timestamp", block.getTimestamp());
+        payload.put("data", block.getData());
+        payload.put("previousHash", block.getPreviousHash());
+        payload.put("hash", block.getHash());
+        payload.put("nonce", block.getNonce());
+        payload.put("outputs", outputs);
+
+        broadcast(new Message(MessageType.NEW_BLOCK, gson.toJson(payload)));
     }
 
     public void broadcastTransaction(Transaction tx) {
@@ -123,25 +175,51 @@ public class Node {
         switch (message.getType()) {
             case HANDSHAKE:
                 Map<String, Object> handshake = gson.fromJson(message.getPayload(), Map.class);
-                peer.setPeerId((String) handshake.get("nodeId"));
+                String peerId = (String) handshake.get("nodeId");
+                int peerHeight = ((Number) handshake.get("height")).intValue();
+
+                boolean firstHandshake = peer.getPeerId() == null;
+                if (firstHandshake) {
+                    peer.setPeerId(peerId);
+
+                    // Send our handshake back
+                    String ourHandshake = gson.toJson(Map.of(
+                        "nodeId", nodeId,
+                        "height", blockchain.getHeight(),
+                        "version", 1
+                    ));
+                    peer.send(new Message(MessageType.HANDSHAKE, ourHandshake));
+
+                    if (onPeerConnected != null) {
+                        onPeerConnected.run();
+                    }
+                }
+
+                // Always check if we need blocks (both sides of connection)
+                if (peerHeight > blockchain.getHeight()) {
+                    peer.send(new Message(MessageType.GET_BLOCKS,
+                        gson.toJson(Map.of("fromIndex", blockchain.getHeight()))));
+                }
                 break;
 
             case NEW_BLOCK:
-                // In a real implementation, we would:
-                // 1. Parse block from JSON
-                // 2. Validate block
-                // 3. Add to blockchain if valid
+                handleNewBlock(message.getPayload());
                 break;
 
             case NEW_TRANSACTION:
-                // In a real implementation, we would:
-                // 1. Parse transaction from JSON
-                // 2. Validate signatures
-                // 3. Add to mempool if valid
+                // TODO: Parse and validate transaction
+                break;
+
+            case WALLET_INFO:
+                handleWalletInfo(message.getPayload());
                 break;
 
             case GET_BLOCKS:
-                // Send blocks to peer
+                handleGetBlocks(peer, message.getPayload());
+                break;
+
+            case BLOCKS:
+                handleBlocks(message.getPayload());
                 break;
 
             case GET_PEERS:
@@ -150,6 +228,226 @@ public class Node {
 
             default:
                 break;
+        }
+    }
+
+    private void handleNewBlock(String payload) {
+        try {
+            Map<String, Object> blockData = gson.fromJson(payload, Map.class);
+
+            int index = ((Number) blockData.get("index")).intValue();
+            long timestamp = ((Number) blockData.get("timestamp")).longValue();
+            String data = (String) blockData.get("data");
+            String previousHash = (String) blockData.get("previousHash");
+            String hash = (String) blockData.get("hash");
+            long nonce = ((Number) blockData.get("nonce")).longValue();
+
+            // Verify this block connects to our chain
+            Block lastBlock = blockchain.getLatestBlock();
+            System.out.println("[Node] handleNewBlock: received block #" + index + ", our lastBlock #" + lastBlock.getIndex());
+            if (index != lastBlock.getIndex() + 1) {
+                // Block doesn't connect - might need sync
+                System.out.println("[Node] handleNewBlock: SKIPPING - block doesn't connect");
+                return;
+            }
+            if (!previousHash.equals(lastBlock.getHash())) {
+                // Chain mismatch
+                return;
+            }
+
+            // Create and add the block
+            Block newBlock = new Block(index, timestamp, data, previousHash);
+            newBlock.setNonce(nonce);
+            newBlock.setHash(hash);
+
+            // Verify hash is correct
+            if (!newBlock.calculateHash().equals(hash)) {
+                return; // Invalid hash
+            }
+
+            // Add to our chain
+            addBlockDirectly(newBlock);
+
+            // Process transaction outputs from the block
+            processBlockOutputs(blockData);
+
+            // Relay block to other peers (propagate through network)
+            broadcast(new Message(MessageType.NEW_BLOCK, payload));
+
+            // Notify UI
+            if (onBlockReceived != null) {
+                onBlockReceived.run();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processBlockOutputs(Map<String, Object> blockData) {
+        try {
+            List<Map<String, Object>> outputs = (List<Map<String, Object>>) blockData.get("outputs");
+            if (outputs == null || outputs.isEmpty()) {
+                return;
+            }
+
+            KeyFactory keyFactory = KeyFactory.getInstance("EC");
+
+            for (Map<String, Object> outputData : outputs) {
+                String recipientKeyBase64 = (String) outputData.get("recipientKey");
+                double amount = ((Number) outputData.get("amount")).doubleValue();
+                String parentTxId = (String) outputData.get("parentTxId");
+
+                byte[] keyBytes = Base64.getDecoder().decode(recipientKeyBase64);
+                PublicKey recipientKey = keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
+
+                TransactionOutput output = new TransactionOutput(recipientKey, amount, parentTxId);
+                System.out.println("[Node] processBlockOutputs: adding UTXO id=" + output.getId().substring(0, 16) + ", amount=" + amount);
+                utxoPool.addUTXO(output);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleWalletInfo(String payload) {
+        try {
+            Map<String, Object> data = gson.fromJson(payload, Map.class);
+            String address = (String) data.get("address");
+            String pubKeyBase64 = (String) data.get("publicKey");
+
+            // Skip if we already know this wallet
+            if (peerWallets.containsKey(address)) {
+                return;
+            }
+
+            byte[] pubKeyBytes = Base64.getDecoder().decode(pubKeyBase64);
+            KeyFactory keyFactory = KeyFactory.getInstance("EC");
+            PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBytes));
+
+            peerWallets.put(address, publicKey);
+
+            // Relay wallet info to other peers
+            broadcast(new Message(MessageType.WALLET_INFO, payload));
+
+            if (onWalletReceived != null) {
+                onWalletReceived.run();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleGetBlocks(PeerConnection peer, String payload) {
+        try {
+            Map<String, Object> request = gson.fromJson(payload, Map.class);
+            int fromIndex = ((Number) request.get("fromIndex")).intValue();
+
+            List<Block> chain = blockchain.getChain();
+            List<Map<String, Object>> blocksData = new ArrayList<>();
+
+            for (int i = fromIndex + 1; i < chain.size(); i++) {
+                Block block = chain.get(i);
+                Map<String, Object> blockData = new HashMap<>();
+                blockData.put("index", block.getIndex());
+                blockData.put("timestamp", block.getTimestamp());
+                blockData.put("data", block.getData());
+                blockData.put("previousHash", block.getPreviousHash());
+                blockData.put("hash", block.getHash());
+                blockData.put("nonce", block.getNonce());
+                blocksData.add(blockData);
+            }
+
+            // Also send UTXO pool data
+            List<Map<String, Object>> utxoData = new ArrayList<>();
+            for (TransactionOutput utxo : utxoPool.getAllUTXOs()) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("recipientKey", Base64.getEncoder().encodeToString(
+                    utxo.getRecipientPublicKey().getEncoded()));
+                data.put("amount", utxo.getAmount());
+                data.put("parentTxId", utxo.getParentTransactionId());
+                utxoData.add(data);
+            }
+
+            peer.send(new Message(MessageType.BLOCKS, gson.toJson(Map.of(
+                "blocks", blocksData,
+                "utxos", utxoData
+            ))));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleBlocks(String payload) {
+        try {
+            Map<String, Object> data = gson.fromJson(payload, Map.class);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> blocksData = (List<Map<String, Object>>) data.get("blocks");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> utxoData = (List<Map<String, Object>>) data.get("utxos");
+
+            // Add blocks
+            for (Map<String, Object> blockData : blocksData) {
+                int index = ((Number) blockData.get("index")).intValue();
+                long timestamp = ((Number) blockData.get("timestamp")).longValue();
+                String blockDataStr = (String) blockData.get("data");
+                String previousHash = (String) blockData.get("previousHash");
+                String hash = (String) blockData.get("hash");
+                long nonce = ((Number) blockData.get("nonce")).longValue();
+
+                Block lastBlock = blockchain.getLatestBlock();
+                if (index != lastBlock.getIndex() + 1) continue;
+                if (!previousHash.equals(lastBlock.getHash())) continue;
+
+                Block newBlock = new Block(index, timestamp, blockDataStr, previousHash);
+                newBlock.setNonce(nonce);
+                newBlock.setHash(hash);
+
+                if (!newBlock.calculateHash().equals(hash)) continue;
+
+                addBlockDirectly(newBlock);
+            }
+
+            // Sync UTXOs
+            if (utxoData != null) {
+                KeyFactory keyFactory = KeyFactory.getInstance("EC");
+                for (Map<String, Object> utxo : utxoData) {
+                    String recipientKeyBase64 = (String) utxo.get("recipientKey");
+                    double amount = ((Number) utxo.get("amount")).doubleValue();
+                    String parentTxId = (String) utxo.get("parentTxId");
+
+                    byte[] keyBytes = Base64.getDecoder().decode(recipientKeyBase64);
+                    PublicKey recipientKey = keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
+
+                    TransactionOutput output = new TransactionOutput(recipientKey, amount, parentTxId);
+                    utxoPool.addUTXO(output);
+                }
+            }
+
+            if (onBlockReceived != null) {
+                onBlockReceived.run();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addBlockDirectly(Block block) {
+        // Access the internal chain list via reflection or add a method to Blockchain
+        // For now, we'll use a workaround by adding through the existing method
+        // and then updating the hash/nonce
+        blockchain.getChain(); // This returns unmodifiable list
+
+        // We need to add a method to Blockchain to add pre-mined blocks
+        // For now, let's use reflection as a workaround
+        try {
+            java.lang.reflect.Field chainField = Blockchain.class.getDeclaredField("chain");
+            chainField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            List<Block> chain = (List<Block>) chainField.get(blockchain);
+            chain.add(block);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

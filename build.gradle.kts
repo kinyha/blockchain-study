@@ -1,14 +1,15 @@
 plugins {
     java
     application
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 group = "com.study"
 version = "1.0-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -17,7 +18,7 @@ repositories {
 
 dependencies {
     // Криптография (ECDSA, SHA-256)
-    implementation("org.bouncycastle:bcprov-jdk18on:1.77")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
 
     // JSON сериализация
     implementation("com.google.code.gson:gson:2.10.1")
@@ -35,6 +36,11 @@ tasks.test {
     }
 }
 
+javafx {
+    version = "21"
+    modules = listOf("javafx.controls", "javafx.graphics")
+}
+
 application {
-    mainClass.set("com.study.blockchain.Main")
+    mainClass.set("com.study.blockchain.ui.App")
 }

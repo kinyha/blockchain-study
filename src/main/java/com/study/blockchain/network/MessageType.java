@@ -7,5 +7,6 @@ public enum MessageType {
     GET_BLOCKS,
     BLOCKS,
     GET_PEERS,
-    PEERS
+    PEERS,
+    WALLET_INFO
 }

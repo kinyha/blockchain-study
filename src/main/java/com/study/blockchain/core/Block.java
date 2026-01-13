@@ -32,8 +32,14 @@ public class Block {
         this.hash = "";
     }
 
+    /**
+     * Fixed timestamp for genesis block to ensure all nodes have identical genesis.
+     */
+    public static final long GENESIS_TIMESTAMP = 1704067200000L; // 2024-01-01 00:00:00 UTC
+
     public static Block createGenesisBlock(String data) {
-        return new Block(0, System.currentTimeMillis(),data,GENESIS_PREV_HASH);
+        // Use fixed timestamp so all nodes have the same genesis hash
+        return new Block(0, GENESIS_TIMESTAMP, data, GENESIS_PREV_HASH);
     }
 
     public String calculateHash() {
