@@ -1,162 +1,170 @@
 # Blockchain Study
 
-Учебный блокчейн на Java с GUI. Майнинг, транзакции, P2P сеть — всё работает.
+Учебный блокчейн на Java + курс по Docker и Kubernetes.
 
-## Быстрый запуск
+## Что это
+
+1. **Blockchain на Java** — UTXO модель, PoW майнинг, REST API
+2. **Docker** — контейнеризация Java-приложений
+3. **Kubernetes** — оркестрация в Kind кластере
+4. **Helm** — пакетный менеджер для K8s
+
+## Быстрый старт (Kubernetes)
 
 ```bash
-# Запуск ноды на порту 8001
-./gradlew run --args="--port=8001"
+# 1. Сборка Docker образа
+docker build -t blockchain-node:latest -f docker/Dockerfile .
 
-# Вторая нода на 8002, подключается к первой
-./gradlew run --args="--port=8002 --connect=localhost:8001"
+# 2. Создание Kind кластера
+kind create cluster --config k8s/kind-config.yaml
+
+# 3. Установка Ingress
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+# 4. Загрузка образа в Kind
+kind load docker-image blockchain-node:latest --name blockchain-cluster
+
+# 5. Установка через Helm
+kubectl create namespace blockchain
+helm install blockchain ./helm/blockchain-network -n blockchain
+
+# 6. Добавить в hosts (PowerShell от админа)
+Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "`n127.0.0.1 miner.localhost wallet.localhost blockchain.localhost orchestrator.localhost dashboard.localhost"
 ```
 
-**Требования:** Java 21+, Gradle
-
-## Что умеет
-
-- **Кошелёк** — генерация ECDSA ключей, баланс через UTXO
-- **Майнинг** — Proof-of-Work с визуализацией перебора nonce
-- **Транзакции** — отправка монет между кошельками с подписями
-- **P2P сеть** — синхронизация блоков и транзакций между нодами
-- **GUI** — JavaFX интерфейс для всего вышеперечисленного
+Открыть: http://dashboard.localhost
 
 ## Архитектура
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Node (P2P)                           │
-│  ┌─────────┐  ┌──────────┐  ┌─────────┐  ┌───────────────┐  │
-│  │ Wallet  │  │Blockchain│  │UTXOPool │  │   Mempool     │  │
-│  │ (keys)  │  │ (blocks) │  │(balance)│  │(pending txs)  │  │
-│  └─────────┘  └──────────┘  └─────────┘  └───────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-         │              │            │              │
-         ▼              ▼            ▼              ▼
-    Подписи        Валидация    Coin Selection   Broadcast
-    ECDSA          хешей        для транзакций   peers
+┌────────────────────────────────────────────────────────┐
+│                 Kubernetes Cluster                      │
+│                                                         │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌───────────┐ │
+│  │  Miner  │  │ Wallet  │  │FullNode │  │Orchestrator│ │
+│  │  Node   │  │ Node x2 │  │  Node   │  │           │ │
+│  └────┬────┘  └────┬────┘  └────┬────┘  └─────┬─────┘ │
+│       └────────────┴───────────┴──────────────┘       │
+│                           │                            │
+│                    ┌──────┴──────┐                    │
+│                    │  Dashboard  │                    │
+│                    │  (nginx)    │                    │
+│                    └──────┬──────┘                    │
+│                           │                            │
+│                    ┌──────┴──────┐                    │
+│                    │   Ingress   │                    │
+│                    └─────────────┘                    │
+└────────────────────────────────────────────────────────┘
+                           │
+                    http://*.localhost
 ```
+
+## Endpoints
+
+| URL | Описание |
+|-----|----------|
+| http://dashboard.localhost | Web UI |
+| http://miner.localhost/api/blocks/height | Высота blockchain |
+| http://miner.localhost/api/wallet/balance | Баланс кошелька |
+| http://orchestrator.localhost/api/orchestrator/network | Статус сети |
 
 ## Структура проекта
 
 ```
-src/main/java/com/study/blockchain/
-├── core/          # Block, Blockchain, HashUtil (SHA-256)
-├── transaction/   # Transaction, Input, Output
-├── wallet/        # Wallet (ECDSA ключи)
-├── mining/        # ProofOfWork
-├── utxo/          # UTXOPool (UTXO модель как в Bitcoin)
-├── network/       # Node, Message, PeerConnection (TCP сокеты)
-└── ui/            # JavaFX GUI
-
-lessons/           # Теория по каждой теме (10 уроков)
+block-chain-study/
+├── src/main/java/com/study/blockchain/
+│   ├── core/           # Block, Blockchain, HashUtil
+│   ├── service/        # Business logic (Spring)
+│   ├── api/            # REST controllers
+│   └── config/         # Spring configuration
+├── docker/
+│   ├── Dockerfile      # Multi-stage build
+│   └── docker-compose.yml
+├── k8s/                # Kubernetes manifests
+├── helm/blockchain-network/  # Helm chart
+├── dashboard/          # HTML dashboard
+├── lessons/            # Уроки по blockchain (10 уроков)
+└── lessons-docker-k8s/ # Уроки по Docker/K8s (15 уроков)
 ```
 
-## Уроки
+## Учебные материалы
 
-| # | Тема | Что делаем |
-|---|------|------------|
-| 1 | Block | Структура блока: index, timestamp, data, hash |
-| 2 | Hashing | SHA-256, связь блоков через previousHash |
-| 3 | Blockchain | Цепочка блоков, genesis block |
-| 4 | Validation | Проверка целостности цепочки |
-| 5 | Transactions | Inputs, Outputs, передача ценности |
-| 6 | Wallets | ECDSA ключи, публичный/приватный |
-| 7 | Signatures | Подпись и верификация транзакций |
-| 8 | Proof-of-Work | Майнинг, nonce, difficulty |
-| 9 | UTXO Pool | Баланс = сумма неизрасходованных выходов |
-| 10 | Network | P2P, синхронизация, mempool |
+### Blockchain (lessons/)
 
-```bash
-# Читай теорию
-cat lessons/01-block.md
+| # | Тема |
+|---|------|
+| 1 | Block — структура блока |
+| 2 | Hashing — SHA-256, связь блоков |
+| 3 | Blockchain — цепочка, genesis |
+| 4 | Validation — проверка цепочки |
+| 5 | Transactions — inputs, outputs |
+| 6 | Wallets — ECDSA ключи |
+| 7 | Signatures — подпись транзакций |
+| 8 | Proof-of-Work — майнинг |
+| 9 | UTXO Pool — модель баланса |
+| 10 | Network — P2P синхронизация |
 
-# Запускай тесты
-./gradlew test --tests BlockTest
-```
+### Docker & Kubernetes (lessons-docker-k8s/)
+
+| # | Тема |
+|---|------|
+| 1-5 | Docker: образы, Dockerfile, Compose |
+| 6-10 | K8s: Pods, Deployments, Services, Ingress |
+| 11-15 | Advanced: Probes, StatefulSets, Helm |
 
 ## Команды
 
+### Kubernetes
+
 ```bash
-# Сборка
-./gradlew build
+# Статус pods
+kubectl get pods -n blockchain
 
-# Все тесты (127 штук)
-./gradlew test
+# Логи
+kubectl logs -f deployment/blockchain-blockchain-network-miner -n blockchain
 
-# Конкретный тест
-./gradlew test --tests WalletTest
-
-# Запуск GUI
-./gradlew run --args="--port=8001"
+# Перезапуск после изменений
+kubectl rollout restart deployment -n blockchain
 ```
 
-## IntelliJ IDEA
+### Helm
 
-**Gradle конфигурация:**
-- Run: `run`
-- Arguments: `--args="--port=8001"`
+```bash
+# Установка
+helm install blockchain ./helm/blockchain-network -n blockchain
 
-**Для второй ноды:** `--args="--port=8002 --connect=localhost:8001"`
+# Обновление
+helm upgrade blockchain ./helm/blockchain-network -n blockchain
 
-## Как работает
-
-### UTXO модель
-
-Баланс — не число в базе, а сумма "непотраченных выходов":
-
-```
-Блок 1: coinbase → Alice получает 50 BTC (UTXO #1)
-Блок 2: Alice → Bob 30 BTC
-         - Input: тратим UTXO #1 (50 BTC)
-         - Output #1: Bob получает 30 BTC
-         - Output #2: Alice получает 20 BTC (сдача)
-
-Alice balance: 20 BTC (один UTXO)
-Bob balance: 30 BTC (один UTXO)
+# Удаление
+helm uninstall blockchain -n blockchain
 ```
 
-### Proof-of-Work
+### Тестирование
 
-Ищем nonce, чтобы hash начинался с N нулей:
+```bash
+# Запустить майнинг
+curl -X POST http://miner.localhost/api/mining/start
 
-```
-difficulty = 5 → hash должен начинаться с "00000..."
-nonce = 0 → hash = "a1b2c3..." ✗
-nonce = 1 → hash = "ff00ab..." ✗
-...
-nonce = 847291 → hash = "00000d7..." ✓
-```
+# Проверить высоту
+curl http://miner.localhost/api/blocks/height
 
-### P2P сеть
-
-```
-Node A (8001) ←──TCP──→ Node B (8002)
-     │                       │
-     └── broadcast block ────┘
-     └── broadcast tx ───────┘
-     └── sync chain ─────────┘
+# Статус сети
+curl http://orchestrator.localhost/api/orchestrator/network
 ```
 
-## Глоссарий
+## Документация
 
-| Термин | Что это |
-|--------|---------|
-| Block | Контейнер с данными и хешем |
-| Hash | SHA-256 отпечаток данных |
-| Nonce | Число для PoW майнинга |
-| UTXO | Unspent Transaction Output |
-| Coinbase | Первая транзакция блока (награда майнеру) |
-| Mempool | Очередь неподтверждённых транзакций |
-| Difficulty | Сколько нулей нужно в начале хеша |
+- [Архитектура системы](docs/ARCHITECTURE.md) — подробное описание всех компонентов
+- [План курса](docs/plans/2026-01-14-docker-k8s-course-design.md) — дизайн-документ
 
-## Зависимости
+## Требования
 
-- **BouncyCastle** — криптография (ECDSA, SHA-256)
-- **Gson** — JSON сериализация для P2P
-- **JavaFX** — GUI
-- **JUnit 5** — тесты
+- Java 21+
+- Docker Desktop
+- kubectl
+- Helm 3
+- Kind
 
 ## License
 

@@ -1,0 +1,32 @@
+# ConfigMap для конфигурации blockchain нод
+# Урок 9: ConfigMap хранит конфигурацию отдельно от образа
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blockchain-config
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: blockchain-network
+data:
+  # Общие настройки для всех нод
+  BLOCKCHAIN_DIFFICULTY: "5"
+  BLOCKCHAIN_GENESIS_REWARD: "10.0"
+  BLOCKCHAIN_BLOCK_REWARD: "1.0"
+  BLOCKCHAIN_TRANSACTION_FEE: "0.1"
+  BLOCKCHAIN_MIN_AMOUNT: "0.1"
+
+  # JVM настройки для контейнеров
+  JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError"
+---
+# ConfigMap для списка пиров (seed nodes)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blockchain-peers
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: blockchain-network
+data:
+  # Пиры будут обнаруживаться через K8s DNS
+  # Формат: <service-name>.<namespace>.svc.cluster.local
+  PEER_SEEDS: "miner-node.blockchain.svc.cluster.local:8080,wallet-node.blockchain.svc.cluster.local:8080"

@@ -1,0 +1,187 @@
+# Default values for blockchain-network
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  # Namespace will be created if doesn't exist
+  namespace: blockchain
+
+# Docker image settings
+image:
+  repository: blockchain-node
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Image pull secrets for private registries
+imagePullSecrets: []
+
+# Override names
+nameOverride: ""
+fullnameOverride: ""
+
+# Blockchain configuration
+blockchain:
+  difficulty: 5
+  genesisReward: "10.0"
+  blockReward: "1.0"
+  transactionFee: "0.1"
+  minAmount: "0.1"
+
+# JVM settings for containers
+javaOpts: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError"
+
+# Node configurations
+nodes:
+  # Miner node - creates new blocks
+  miner:
+    enabled: true
+    replicaCount: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "1000m"
+
+  # Wallet node - handles transactions
+  wallet:
+    enabled: true
+    replicaCount: 2
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  # Full node - mining + wallet + sync
+  fullNode:
+    enabled: true
+    replicaCount: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "1000m"
+
+  # Orchestrator - network management and monitoring
+  orchestrator:
+    enabled: true
+    port: 8090
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+
+# Dashboard configuration
+dashboard:
+  enabled: true
+  # URL for dashboard to connect to orchestrator (must be accessible from browser)
+  orchestratorUrl: "http://orchestrator.localhost"
+  image:
+    repository: nginxinc/nginx-unprivileged
+    tag: "alpine"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "32Mi"
+      cpu: "10m"
+    limits:
+      memory: "64Mi"
+      cpu: "100m"
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: miner.localhost
+      paths:
+        - path: /
+          pathType: Prefix
+          service: miner
+    - host: wallet.localhost
+      paths:
+        - path: /
+          pathType: Prefix
+          service: wallet
+    - host: blockchain.localhost
+      paths:
+        - path: /
+          pathType: Prefix
+          service: fullNode
+    - host: orchestrator.localhost
+      paths:
+        - path: /
+          pathType: Prefix
+          service: orchestrator
+    - host: dashboard.localhost
+      paths:
+        - path: /
+          pathType: Prefix
+          service: dashboard
+  tls: []
+  #  - secretName: blockchain-tls
+  #    hosts:
+  #      - blockchain.localhost
+
+# Health check configuration
+healthCheck:
+  path: /api/node/health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Startup probe configuration (for slow starting apps)
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 30
+  timeoutSeconds: 3
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Graceful shutdown
+terminationGracePeriodSeconds: 60
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}

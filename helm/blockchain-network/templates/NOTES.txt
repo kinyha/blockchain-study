@@ -1,0 +1,89 @@
+🎉 Blockchain Network has been deployed!
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Chart Version: {{ .Chart.Version }}
+App Version: {{ .Chart.AppVersion }}
+
+Deployed Components:
+{{- if .Values.nodes.miner.enabled }}
+  - Miner Node ({{ .Values.nodes.miner.replicaCount }} replica(s))
+{{- end }}
+{{- if .Values.nodes.wallet.enabled }}
+  - Wallet Node ({{ .Values.nodes.wallet.replicaCount }} replica(s))
+{{- end }}
+{{- if .Values.nodes.fullNode.enabled }}
+  - Full Node ({{ .Values.nodes.fullNode.replicaCount }} replica(s))
+{{- end }}
+{{- if .Values.nodes.orchestrator.enabled }}
+  - Orchestrator (1 replica)
+{{- end }}
+{{- if .Values.dashboard.enabled }}
+  - Dashboard (1 replica)
+{{- end }}
+
+⚙️ Blockchain Configuration:
+  - Difficulty: {{ .Values.blockchain.difficulty }}
+  - Genesis Reward: {{ .Values.blockchain.genesisReward }}
+  - Block Reward: {{ .Values.blockchain.blockReward }}
+  - Transaction Fee: {{ .Values.blockchain.transactionFee }}
+
+{{- if .Values.ingress.enabled }}
+
+🌐 Access URLs:
+{{- range .Values.ingress.hosts }}
+  - http://{{ .host }}
+{{- end }}
+
+Make sure to add these hosts to your /etc/hosts file:
+127.0.0.1 {{ range .Values.ingress.hosts }}{{ .host }} {{ end }}
+
+{{- else }}
+
+🔌 To access the application, run:
+
+  # Miner API
+  kubectl port-forward svc/{{ include "blockchain-network.fullname" . }}-miner {{ .Values.service.port }}:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+
+  # Then visit: http://localhost:{{ .Values.service.port }}/api/node/health
+
+{{- end }}
+
+Useful commands:
+
+  # Check pods status
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+  # View logs
+  kubectl logs -f deployment/{{ include "blockchain-network.fullname" . }}-miner -n {{ .Release.Namespace }}
+
+  # Check blockchain height
+  curl http://miner.localhost/api/blocks/height
+
+  # Mine a block
+  curl -X POST http://miner.localhost/api/mining/mine
+
+{{- if .Values.nodes.orchestrator.enabled }}
+
+  # Register nodes with orchestrator
+  curl -X POST http://orchestrator.localhost/api/orchestrator/nodes/register \
+    -H "Content-Type: application/json" \
+    -d '{"nodeId":"miner-0","url":"http://{{ include "blockchain-network.fullname" . }}-miner:8080","role":"miner"}'
+
+  # Get network status
+  curl http://orchestrator.localhost/api/orchestrator/network
+{{- end }}
+
+{{- if .Values.dashboard.enabled }}
+
+  # Open dashboard
+  Open http://dashboard.localhost in your browser
+{{- end }}
+
+  # Upgrade release
+  helm upgrade {{ .Release.Name }} ./helm/blockchain-network
+
+  # Uninstall
+  helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+Happy mining!

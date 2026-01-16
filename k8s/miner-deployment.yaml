@@ -1,0 +1,92 @@
+# Deployment для майнер-ноды
+# Урок 7: Deployment управляет ReplicaSet и обеспечивает rolling updates
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: miner-node
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: miner-node
+    app.kubernetes.io/component: miner
+    app.kubernetes.io/part-of: blockchain-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: miner-node
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: miner-node
+        app.kubernetes.io/component: miner
+    spec:
+      # Урок 5: non-root пользователь для безопасности
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: blockchain-node
+          image: blockchain-node:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          # Урок 9: переменные из ConfigMap
+          envFrom:
+            - configMapRef:
+                name: blockchain-config
+            - configMapRef:
+                name: blockchain-peers
+
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NODE_ROLE
+              value: "miner"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "miner"
+            - name: SERVER_PORT
+              value: "8080"
+
+          # Урок 11: Resources - запросы и лимиты ресурсов
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+
+          # Урок 11: Probes для проверки здоровья
+          livenessProbe:
+            httpGet:
+              path: /api/node/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /api/node/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Security context для контейнера
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL

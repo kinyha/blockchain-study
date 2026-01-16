@@ -1,0 +1,117 @@
+{{- if .Values.nodes.miner.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blockchain-network.fullname" . }}-miner
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+    app.kubernetes.io/component: miner
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "blockchain-network.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: miner
+---
+{{- end }}
+{{- if .Values.nodes.wallet.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blockchain-network.fullname" . }}-wallet
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+    app.kubernetes.io/component: wallet
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "blockchain-network.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: wallet
+---
+{{- end }}
+{{- if .Values.nodes.fullNode.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blockchain-network.fullname" . }}-fullnode
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+    app.kubernetes.io/component: fullnode
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "blockchain-network.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: fullnode
+---
+{{- end }}
+{{- if .Values.nodes.orchestrator.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blockchain-network.fullname" . }}-orchestrator
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+    app.kubernetes.io/component: orchestrator
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.nodes.orchestrator.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "blockchain-network.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: orchestrator
+---
+{{- end }}
+{{- if .Values.dashboard.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blockchain-network.fullname" . }}-dashboard
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "blockchain-network.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+---
+{{- end }}
+# Headless service for peer discovery
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blockchain-network.fullname" . }}-peers
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "blockchain-network.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,99 @@
+# =============================================================================
+# Blockchain Network - Docker Compose
+# =============================================================================
+# This file creates a 3-node blockchain network for learning and testing.
+# Each node runs independently and can communicate via REST API.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Node 1 - Miner node (genesis)
+  # ---------------------------------------------------------------------------
+  node1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: blockchain-node1
+    ports:
+      - "8001:8080"
+    environment:
+      - NODE_ID=node-1
+      - PORT=8080
+      - DIFFICULTY=4
+    networks:
+      - blockchain-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/node/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Node 2 - Regular node
+  # ---------------------------------------------------------------------------
+  node2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: blockchain-node2
+    ports:
+      - "8002:8080"
+    environment:
+      - NODE_ID=node-2
+      - PORT=8080
+      - DIFFICULTY=4
+    networks:
+      - blockchain-net
+    depends_on:
+      node1:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Node 3 - Regular node
+  # ---------------------------------------------------------------------------
+  node3:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: blockchain-node3
+    ports:
+      - "8003:8080"
+    environment:
+      - NODE_ID=node-3
+      - PORT=8080
+      - DIFFICULTY=4
+    networks:
+      - blockchain-net
+    depends_on:
+      node1:
+        condition: service_healthy
+
+networks:
+  blockchain-net:
+    driver: bridge
+    name: blockchain-network
+
+# =============================================================================
+# Usage:
+# =============================================================================
+# Build and start:
+#   docker-compose -f docker/docker-compose.yml up --build -d
+#
+# Check status:
+#   docker-compose -f docker/docker-compose.yml ps
+#
+# View logs:
+#   docker-compose -f docker/docker-compose.yml logs -f
+#
+# Test endpoints:
+#   curl http://localhost:8001/api/node/health
+#   curl http://localhost:8001/api/blocks
+#   curl http://localhost:8001/api/wallet/balance
+#
+# Mine a block:
+#   curl -X POST http://localhost:8001/api/mining/mine
+#
+# Stop:
+#   docker-compose -f docker/docker-compose.yml down
+# =============================================================================

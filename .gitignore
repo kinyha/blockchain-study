@@ -35,3 +35,9 @@ replay_pid*
 # Claude Code temp files
 tmpclaude-*
 .claude/
+
+# Kind binary
+kind-*.exe
+
+# Windows null device artifact
+nul

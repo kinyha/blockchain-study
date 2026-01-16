@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blockchain-network.configmapName" . }}
+  labels:
+    {{- include "blockchain-network.labels" . | nindent 4 }}
+data:
+  BLOCKCHAIN_DIFFICULTY: {{ .Values.blockchain.difficulty | quote }}
+  BLOCKCHAIN_GENESIS_REWARD: {{ .Values.blockchain.genesisReward | quote }}
+  BLOCKCHAIN_BLOCK_REWARD: {{ .Values.blockchain.blockReward | quote }}
+  BLOCKCHAIN_TRANSACTION_FEE: {{ .Values.blockchain.transactionFee | quote }}
+  BLOCKCHAIN_MIN_AMOUNT: {{ .Values.blockchain.minAmount | quote }}
+  JAVA_OPTS: {{ .Values.javaOpts | quote }}
+  PEER_SEEDS: {{ include "blockchain-network.peerSeeds" . | quote }}

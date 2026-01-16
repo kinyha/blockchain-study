@@ -1,7 +1,7 @@
 plugins {
     java
-    application
-    id("org.openjfx.javafxplugin") version "0.1.0"
+    id("org.springframework.boot") version "3.2.1"
+    id("io.spring.dependency-management") version "1.1.4"
 }
 
 group = "com.study"
@@ -17,6 +17,10 @@ repositories {
 }
 
 dependencies {
+    // Spring Boot
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
     // Криптография (ECDSA, SHA-256)
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
 
@@ -24,6 +28,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
 
     // Тестирование
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(platform("org.junit:junit-bom:5.10.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -36,11 +41,6 @@ tasks.test {
     }
 }
 
-javafx {
-    version = "21"
-    modules = listOf("javafx.controls", "javafx.graphics")
-}
-
-application {
-    mainClass.set("com.study.blockchain.ui.App")
+springBoot {
+    mainClass.set("com.study.blockchain.BlockchainNodeApplication")
 }

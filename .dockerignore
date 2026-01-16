@@ -1,0 +1,30 @@
+# Build outputs
+build/
+.gradle/
+out/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+lessons/
+lessons-docker-k8s/
+
+# Test files (not needed in production image)
+src/test/
+
+# Local config
+*.local
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

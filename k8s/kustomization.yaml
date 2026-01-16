@@ -1,0 +1,32 @@
+# Kustomization для сборки всех манифестов
+# Урок 10: Kustomize - встроенный в kubectl инструмент кастомизации
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: blockchain-network
+
+# Общие labels для всех ресурсов
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  environment: development
+
+# Namespace для всех ресурсов
+namespace: blockchain
+
+# Ресурсы в порядке применения
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - miner-deployment.yaml
+  - wallet-deployment.yaml
+  - full-node-deployment.yaml
+  - services.yaml
+  - ingress.yaml
+
+# Общие аннотации
+commonAnnotations:
+  blockchain.io/version: "1.0.0"
+  blockchain.io/course: "docker-k8s-study"

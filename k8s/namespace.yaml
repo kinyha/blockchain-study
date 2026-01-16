@@ -1,0 +1,9 @@
+# Namespace для изоляции blockchain ресурсов
+# Урок 6: namespace — логическая группировка ресурсов в кластере
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blockchain
+  labels:
+    app.kubernetes.io/name: blockchain-network
+    app.kubernetes.io/part-of: blockchain-study

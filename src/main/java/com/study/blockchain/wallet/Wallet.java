@@ -17,7 +17,7 @@ public class Wallet {
     public Wallet() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-            keyGen.initialize(git256);
+            keyGen.initialize(256);
             KeyPair pair = keyGen.generateKeyPair();
             this.privateKey = pair.getPrivate();
             this.publicKey = pair.getPublic();

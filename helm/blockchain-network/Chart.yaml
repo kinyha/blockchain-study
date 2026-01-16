@@ -1,0 +1,20 @@
+apiVersion: v2
+name: blockchain-network
+description: A Helm chart for deploying blockchain network on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - blockchain
+  - cryptocurrency
+  - distributed-systems
+  - learning
+
+home: https://github.com/example/blockchain-study
+sources:
+  - https://github.com/example/blockchain-study
+
+maintainers:
+  - name: Blockchain Study
+    email: study@example.com

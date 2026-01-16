@@ -1,0 +1,84 @@
+# Services для доступа к blockchain нодам
+# Урок 8: Service - абстракция для доступа к группе подов
+
+---
+# ClusterIP Service для miner-node
+# Доступен только внутри кластера
+apiVersion: v1
+kind: Service
+metadata:
+  name: miner-node
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: miner-node
+    app.kubernetes.io/component: miner
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: miner-node
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+---
+# ClusterIP Service для wallet-node
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-node
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: wallet-node
+    app.kubernetes.io/component: wallet
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: wallet-node
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+---
+# ClusterIP Service для full-node
+apiVersion: v1
+kind: Service
+metadata:
+  name: full-node
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: full-node
+    app.kubernetes.io/component: full
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: full-node
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+---
+# Headless Service для peer discovery
+# Урок 8: Headless Service (clusterIP: None) возвращает IP всех подов
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain-peers
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: blockchain-peers
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/part-of: blockchain-network
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

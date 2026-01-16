@@ -1,0 +1,115 @@
+# Ingress для внешнего доступа к blockchain API
+# Урок 8: Ingress - HTTP/HTTPS маршрутизация в кластер
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blockchain-ingress
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: blockchain-ingress
+  annotations:
+    # Аннотации для nginx ingress controller
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+    # Доступ по пути: http://localhost/miner/api/...
+    - http:
+        paths:
+          # Miner node API
+          - path: /miner(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: miner-node
+                port:
+                  name: http
+
+          # Wallet node API
+          - path: /wallet(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: wallet-node
+                port:
+                  name: http
+
+          # Full node API
+          - path: /full(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: full-node
+                port:
+                  name: http
+
+          # Default route to full-node
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: full-node
+                port:
+                  name: http
+---
+# Альтернативный Ingress без rewrite (проще для Kind)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blockchain-ingress-simple
+  namespace: blockchain
+  labels:
+    app.kubernetes.io/name: blockchain-ingress-simple
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+    # Доступ по хосту: http://miner.localhost/api/...
+    - host: miner.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: miner-node
+                port:
+                  name: http
+
+    - host: wallet.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wallet-node
+                port:
+                  name: http
+
+    - host: full.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: full-node
+                port:
+                  name: http
+
+    # Default для blockchain.localhost
+    - host: blockchain.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: full-node
+                port:
+                  name: http

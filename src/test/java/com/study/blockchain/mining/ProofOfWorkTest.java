@@ -48,7 +48,7 @@ class ProofOfWorkTest {
         void minesBlock() {
 
             Block block = new Block(1, System.currentTimeMillis(), "Test data", "0");
-            ProofOfWork pow = new ProofOfWork(9);
+            ProofOfWork pow = new ProofOfWork(4);
 
             long start = System.currentTimeMillis();
             pow.mine(block);
